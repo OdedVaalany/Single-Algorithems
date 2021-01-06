@@ -1,0 +1,223 @@
+<html>
+    <head>
+        <title>Sudoko Solver</title>
+
+        <style>
+            body{
+                background: 'whitesmoke';
+                width: 100vw;
+                height: 100vh;
+                margin: 0px;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+            }
+            td > button{
+                display: inline-block;
+                border: 1px solid grey;
+                width: 50px;
+                height: 50px;
+                border-radius: 10px;
+                margin: 1px 2px;
+                font-size: 20pt;
+                text-align: center;
+                vertical-align: text-bottom;
+                padding: 0px;
+                outline: none;
+                background: #fafafa;
+            }
+
+            button:hover{
+                background: white;
+                box-shadow: grey 0px 0px 5px;
+            }
+        </style>
+
+        <script>
+            var LockColor = 'rgba(0,0,0,0.2)';
+            function ClearAll(){
+                for (let i = 0; i < table.children.length; i++) {
+                    let row = table.children[i];
+                    for (let j = 0; j < row.children.length; j++) {
+                        row.children[j].firstChild.innerHTML = '';
+                        row.children[j].firstChild.style.background = '#fafafa';
+                    }
+                    
+                }
+            }
+
+            function Solve(){
+                markLock();
+                for (let i = 0; i < table.children.length; i++) {
+                    let row = table.children[i];
+                    for (let j = 0; j < row.children.length; j++) {
+                        if(row.children[j].firstChild.innerHTML === ''){
+                            let aa = getOptions(i,j);
+                            console.log(Math.floor(Math.random()*aa.length));
+                            if(aa.length === 0){
+                                changeSolve(i,j);
+                                j--;
+                            }
+                            else
+                                row.children[j].firstChild.innerHTML = aa[Math.floor(Math.random()*aa.length)];
+                        }
+                    }
+                    
+                }
+            }
+
+            function changeSolve(r,c){
+                for (let i = 0; i < r; i++) {
+                    let row = table.children[i];
+                    for (let j = 0; j < (row.children.length); j++) {
+                        if(row.children[j].firstChild.style.background !== LockColor){
+                            let op = getOptions(i,j);
+                            if(op.length > 1){
+                                let currentNum = parseInt(row.children[j].firstChild.innerHTML);
+                                while(op.length > 0){
+                                    let some = op.pop();
+                                    if(some !== currentNum){
+                                        row.children[j].firstChild.innerHTML = some;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        else console.log('this is a mark place');
+                    }
+                }
+                let row = table.children[r];
+                for (let j = 0; j < (c); j++) {
+                    if(row.children[j].firstChild.style.background !== LockColor){
+                        let op = getOptions(r,j);
+                        if(op.length > 1){
+                            let currentNum = parseInt(row.children[j].firstChild.innerHTML);
+                            while(op.length > 0){
+                                let some = op.pop();
+                                if(some !== currentNum){
+                                    row.children[j].firstChild.innerHTML = some;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    else console.log('this is a mark place');
+                }
+            }
+
+            function markLock(){
+                for (let i = 0; i < table.children.length; i++) {
+                    let row = table.children[i];
+                    for (let j = 0; j < row.children.length; j++) {
+                        if(row.children[j].firstChild.innerHTML !== ''){
+                            row.children[j].firstChild.style.background = LockColor;  
+                        }
+                    } 
+                }
+            }
+
+            function getOptions(i,j){
+                let options = [1,2,3,4,5,6,7,8,9];
+                        for (let r = 0; r < 9; r++) {
+                            //console.log(parseInt(table.children[i].children[r].firstChild.innerHTML));
+                            //console.log(parseInt(table.children[r].children[j].firstChild.innerHTML));
+                            if(table.children[r].children[j].firstChild.innerHTML !== '' && r !== i){
+                                let x = parseInt(table.children[r].children[j].firstChild.innerHTML);
+                                if(options.indexOf(x) !== -1){
+                                        options.splice(options.indexOf(x),1);
+                                }
+                            }
+                            if(table.children[i].children[r].firstChild.innerHTML !== '' && r !== j){
+                                let y = parseInt(table.children[i].children[r].firstChild.innerHTML);
+                                if(options.indexOf(y) !== -1){
+                                        options.splice(options.indexOf(y),1);
+                                }
+                            }
+
+                        }
+
+                        let groupR = i - i%3 + 1;
+                        let groupC = j - j%3 + 1;
+                        console.log(groupR + ' ' + groupC);
+                        for (let a = groupR -1; a <= groupR + 1; a++) {
+                            for (let b = groupC -1; b <= groupC + 1; b++) {
+                                if(table.children[a].children[b].firstChild.innerHTML !== '' && a !== i && b !== j){
+                                    let y = parseInt(table.children[a].children[b].firstChild.innerHTML);
+                                    if(options.indexOf(y) !== -1){
+                                        options.splice(options.indexOf(y),1);
+                                    }
+                                }
+                            }
+                        }
+                return options;
+            }
+        </script>
+
+
+    </head>
+    <body>
+        <h1>Sudoko Solver</h1>
+        <script>
+            var table = document.createElement('table');
+            for (let i = 0; i < 9; i++) {
+                let row = document.createElement('tr');
+                for (let j = 0; j < 9; j++) {
+                    let button = document.createElement('button');
+                    button.innerHTML = '';
+                    button.addEventListener('click', (e) => {
+                        let innernumber = parseInt(e.target.innerHTML);
+                        if(innernumber > 0 && innernumber < 9)
+                            e.target.innerHTML = innernumber +1;
+                        else if(innernumber !== 9)
+                            e.target.innerHTML = '1';
+                        else
+                            e.target.innerHTML = ''
+                    })
+                    button.addEventListener('keydown', e =>{
+                        let options = [1,2,3,4,5,6,7,8,9];
+                        for (let r = 0; r < 9; r++) {
+                            //console.log(parseInt(table.children[i].children[r].firstChild.innerHTML));
+                            //console.log(parseInt(table.children[r].children[j].firstChild.innerHTML));
+                            if(table.children[r].children[j].firstChild.innerHTML !== '' && r !== i){
+                                let x = parseInt(table.children[r].children[j].firstChild.innerHTML);
+                                options.splice(options.indexOf(x),1);
+                            }
+                            if(table.children[i].children[r].firstChild.innerHTML !== '' && r !== j){
+                                let y = parseInt(table.children[i].children[r].firstChild.innerHTML);
+                                options.splice(options.indexOf(y),1);
+                            }
+                        }
+                        console.log(options);
+
+                        let groupR = i - i%3 + 1;
+                        let groupC = j - j%3 + 1;
+                        console.log(groupR + ' ' + groupC);
+                        for (let a = groupR -1; a <= groupR + 1; a++) {
+                            for (let b = groupC -1; b <= groupC + 1; b++) {
+                                if(table.children[a].children[b].firstChild.innerHTML !== '' && a !== i && b !== j){
+                                    let y = parseInt(table.children[a].children[b].firstChild.innerHTML);
+                                    if(options.indexOf(y) !== -1){
+                                        options.splice(options.indexOf(y),1);
+                                    }
+                                }
+                            }
+                        }
+                        console.log(options);
+                    });
+                    let td = document.createElement('td')
+                    td.appendChild(button);
+                    row.appendChild(td);
+                    
+                }
+                table.appendChild(row);
+            }
+            document.body.appendChild(table);
+        </script>
+
+        <div class="Buttons">
+            <button onclick="ClearAll()">Clear All</button>
+            <button onclick="Solve()">Solve</button>
+        </div>
+    </body>
+</html>
