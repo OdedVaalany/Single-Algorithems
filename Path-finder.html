@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Path Finder</title>
+
+    <style>
+
+        td{
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 1px solid black;
+            margin: 0px;
+            font-size: 5px;
+        }
+
+        table{
+            border-spacing: 0px;
+        }
+
+    </style>
+
+</head>
+<body>
+    <script>
+        var Color = "grey";
+        var Loop;
+        var StuckFlag = false;
+        var StuckCells = [{r : -10, c : -10}];
+        var MouseDown = false;
+        var StartFlag = false;
+        var EndFlag = false;
+        var currentCord = {r:null,c:null};
+
+
+        var table = document.createElement("table");
+        const TotalR = 28 ,TotalC = 40;
+        for (let i = 0; i < TotalR; i++) {
+            let row = document.createElement('tr');
+            for (let j = 0; j < TotalC; j++) {
+                let cell = document.createElement('td');
+                cell.style.background = 'white';
+                cell.innerHTML = '';
+                cell.id = `${i}|${j}`
+                cell.addEventListener("mousedown",(e) =>{
+                    if(e.target.style.background != "red" && e.target.style.background != "blue"){
+                        if(e.target.style.background == Color){
+                            e.target.style.background = 'white';
+                        }
+                        else{
+                            if(StartFlag == true){
+                                e.target.style.background = "red";
+                                StartFlag = {r : parseInt(e.target.id.split('|')[0]),c : parseInt(e.target.id.split('|')[1])}
+                                currentCord.c = StartFlag.c;
+                                currentCord.r = StartFlag.r;
+                                EndFlag = true
+                            }
+                            else if(EndFlag == true){
+                                e.target.style.background = "Blue";
+                                EndFlag = {r : parseInt(e.target.id.split('|')[0]),c : parseInt(e.target.id.split('|')[1])}
+                                console.log(EndFlag);
+                            }
+                            else{
+                                e.target.style.background = Color;
+                            }
+                        }
+                        MouseDown = true;
+                    }
+                });
+                cell.addEventListener("mouseover",(e)=>{
+                    if(MouseDown && (e.target.style.background != "red" && e.target.style.background != "blue"))
+                        e.target.style.background = Color;
+                })
+                cell.addEventListener("mouseup",(e)=>{
+                    MouseDown = false;
+                });
+                row.appendChild(cell);
+            }
+            table.appendChild(row);
+        }
+        document.body.appendChild(table);
+
+        function ClearAll(){
+            for (let i = 0; i < TotalR; i++) {
+                for (let j = 0; j < TotalC; j++) {
+                    table.children[i].children[j].style.background = 'white';   
+                }
+            }
+        }
+
+        function MarkPositions(e){
+            e.disabled = true;
+            StartFlag = true;
+        }
+    
+        function CalcDis(r,c){
+            let dc = Math.abs(EndFlag.c - c);
+            let dr = Math.abs(EndFlag.r - r);
+            return dc + dr;
+        }
+
+        function RunCalc(){
+            const r = currentCord.r;
+            const c = currentCord.c;
+            var minDis = TotalC + TotalR;
+             
+            try{
+                if((table.children[r+1].children[c].style.background == 'white' || table.children[r+1].children[c].style.background == 'blue') && !isStuck(r+1,c)){
+                    if(CalcDis(r+1,c) < minDis){
+                        currentCord.r = r + 1;
+                        currentCord.c = c;
+                        minDis = CalcDis(r+1,c);
+                    }
+                }
+            } catch (err) {}
+            try{
+                if((table.children[r-1].children[c].style.background == 'white' || table.children[r-1].children[c].style.background == 'blue') && !isStuck(r-1,c)){
+                    if(CalcDis(r-1,c) < minDis){
+                        currentCord.r = r - 1;
+                        currentCord.c = c;
+                        minDis = CalcDis(r-1,c);
+                    }
+                }
+            } catch (err) {}
+            try{
+                if((table.children[r].children[c + 1].style.background == 'white' || table.children[r].children[c + 1].style.background == 'blue') && !isStuck(r,c+1)){
+                    if(CalcDis(r,c + 1) < minDis){
+                        currentCord.r = r;
+                        currentCord.c = c + 1;
+                        minDis = CalcDis(r,c+1);
+                    }
+                }
+            } catch (err) {}
+            try{
+                if((table.children[r].children[c-1].style.background == 'white' || table.children[r].children[c-1].style.background == 'blue') && !isStuck(r,c-1)){
+                    if(CalcDis(r,c-1) < minDis){
+                        currentCord.r = r;
+                        currentCord.c = c - 1;
+                        minDis = CalcDis(r,c-1);
+                    }
+                }
+            } catch (err) {}
+
+            document.getElementById(currentCord.r + '|' + currentCord.c).style.background = 'red';
+
+            if(currentCord.c == EndFlag.c && currentCord.r == EndFlag.r)
+                clearInterval(Loop);
+
+            if(TotalC + TotalR == minDis){
+                clearInterval(Loop);
+                StuckCells.push({r: r,c: c});
+                console.log(StuckCells);
+                clearReds();
+                currentCord.c = StartFlag.c;
+                currentCord.r = StartFlag.r;
+                document.getElementById(currentCord.r + '|' + currentCord.c).style.background = 'red';
+                FindPath();
+            }
+        }
+
+        function clearReds(){
+            for (let i = 0; i < TotalR; i++) {
+                for (let j = 0; j < TotalC; j++) {
+                    if(table.children[i].children[j].style.background == 'red')
+                        table.children[i].children[j].style.background = 'white';   
+                }
+            }
+        }
+
+        function isStuck(r,c){
+            for (let i = 0; i < StuckCells.length; i++) {
+                if(StuckCells[i].r == r && StuckCells[i].c == c) {
+                    return true
+                }
+            }
+            return false;
+        }
+
+        function FindPath(){
+            Loop = setInterval(() => {
+                RunCalc();
+            }, 1);
+        }
+
+
+    </script>
+    <div>
+        <button onclick="ClearAll()">Clear All</button>
+        <button onclick="FindPath()">Find the way</button>
+        <button onclick="MarkPositions(this)">Positions</button>
+    </div>
+</body>
+</html>
