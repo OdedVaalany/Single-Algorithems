@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+    <style>
+        body{
+            background: rgb(255, 255, 247);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100vw;
+            padding: 0px;
+            margin: 0px;
+        }
+
+        canvas{
+            box-shadow: rgba(0, 0, 0,0.3) 0px 0px 10px;
+        }
+    </style>
+
+</head>
+<body>
+    <script>
+        var canvas = document.createElement('canvas');
+        canvas.height = 500;
+        canvas.width = 500;
+        canvas.style.background = 'white';
+
+        var ctx = canvas.getContext('2d');
+        document.body.append(canvas);
+
+        var Radius = 10;
+        var SideWidth = Math.sqrt(2 * Radius * Radius - 2 * Radius * Radius * Math.cos(Math.PI / 3));
+        var ShapeHeight = Math.sqrt(Radius * Radius - (SideWidth * SideWidth / 4));
+        
+        var Honey = createArray(Math.floor((canvas.height + ShapeHeight) / ShapeHeight) + 1, Math.floor((SideWidth+ Radius+ Radius)) * 2);
+        console.log(Honey.length);
+        FirstWrite();
+        setInterval(()=>{
+            DrawBord();
+            ChangeHoney(2,5);
+        },500);
+
+        function DrawHax(x,y,r,stroke){
+            ctx.fillStyle = 'rgba(0,0,0,1)';
+            ctx.strokeStyle = 'black';
+            ctx.beginPath();
+            ctx.moveTo(x + Math.cos(0) * r,y + Math.sin(0) * r);
+            for (let a = (Math.PI / 3); a <= (Math.PI *2); a+=(Math.PI / 3)) {
+                ctx.lineTo(x + Math.cos(a) * r,y + Math.sin(a) * r);
+            }
+            ctx.closePath();
+            if(stroke)
+                ctx.fill();
+            else
+                ctx.stroke();
+
+        }
+
+        function createArray(length) {
+            var arr = new Array(length || 0),
+                i = length;
+
+            if (arguments.length > 1) {
+                var args = Array.prototype.slice.call(arguments, 1);
+                while(i--) arr[length-1 - i] = createArray.apply(this, args);
+            }
+
+            return arr;
+        }
+
+        function FirstWrite(){
+            for (let i = 0; i < Honey.length; i++) {
+                let j = i%2 == 0 ? 0 : 1;
+                for (; j < Honey[i].length; j+=2) {
+                    Honey[i][j] = Math.round(Math.random()) == 1;
+                }
+            }
+        }
+
+        function ChangeHoney(min,max){
+            console.log(min + ' ' + max);
+            var arr = createArray(Math.floor((canvas.height + ShapeHeight) / ShapeHeight) + 1, Math.floor((SideWidth+ Radius+ Radius)) * 2);
+            let sum;
+            for (let i = 0; i < Honey.length; i++) {
+                let j = (i%2 == 0) ? 0 : 1;
+                for (; j < Honey[i].length; j+=2) {
+                    sum = 0;
+                    try {
+                        sum +=  Honey[i-2][j] ? 1 : 0
+                    } catch (error) {}
+                    try {
+                        sum +=  Honey[i+2][j] ? 1 : 0
+                    } catch (error) {}
+                    try {
+                        sum +=  Honey[i + 1][j + 1] ? 1 : 0
+                    } catch (error) {}
+                    try {
+                        sum +=  Honey[i - 1][j + 1] ? 1 : 0
+                    } catch (error) {}
+                    try {
+                        sum +=  Honey[i + 1][j - 1] ? 1 : 0
+                    } catch (error) {}
+                    try {
+                        sum +=  Honey[i - 1][j - 1] ? 1 : 0
+                    } catch (error) {}
+                    arr[i][j] = (sum >= min && sum <= max);
+                }
+            }
+
+            Copy(Honey,arr);
+        }
+
+        function Copy(arr,arr2){
+            for (let i = 0; i < arr.length; i++) {
+                for (let j = 0; j < arr[i].length; j++) { 
+                    arr[i][j] = arr2[i][j];
+                }
+            }
+        }
+
+
+        async function DrawBord(){
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            for (let y = 0, i =0; y <= canvas.height + ShapeHeight; y+=ShapeHeight,i++) {
+                let x = i%2 == 0 ? 0 : (0 - (SideWidth+ Radius+ Radius)/2);
+                let j = i%2 == 0 ? 0 : 1;
+                for (; x <= canvas.width + SideWidth; x+=(SideWidth+ Radius+ Radius),j+=2) {
+                    DrawHax(x,y,Radius,Honey[i][j]);
+                }
+            }
+        }
+
+        function delay(mill){
+            var time = new Date(Date.now() + mill);
+            while((new Date(Date.now())) <= time){
+
+            }
+            return null
+        }
+
+
+
+    </script>
+</body>
+</html>
