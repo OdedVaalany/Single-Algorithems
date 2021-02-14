@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eat.io</title>
+
+    <style>
+
+        *{
+            padding: 0px;
+            margin: 0px;
+            box-sizing: content-box;
+        }
+
+        canvas{
+            background: url('https://www.toptal.com/designers/subtlepatterns/patterns/papyrus.png');
+        }
+
+    </style>
+
+    <script>
+        //define var for the main player
+        var MainPlayer;
+        var X_POSITION,Y_POSITION;
+        var LAST_KEY = {x:0,y:0}, JUMP = 4;
+        var RWFA;
+        const ArenaRadius = 1000;
+
+        const StartGame = () =>{
+            MainPlayer = new Player();
+            X_POSITION = canvas.width/2;
+            Y_POSITION = canvas.height/2;
+            ctx.translate(X_POSITION,Y_POSITION);
+        }
+
+        const ResizeFrame = () => {
+            window.cancelAnimationFrame(RWFA);
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            X_POSITION = window.innerWidth/2 - MainPlayer.x;
+            Y_POSITION = window.innerHeight/2 - MainPlayer.y;
+            ctx.translate(X_POSITION,Y_POSITION);
+            Render();
+        }
+
+        const Render = () => {
+            MovePlayer();
+            MainPlayer.Eat();
+            ctx.clearRect(-X_POSITION,-Y_POSITION,canvas.width,canvas.height);
+            MainPlayer.Draw();
+            ToDraw.forEach(e => e.Draw()); 
+            ctx.fillRect(0,0,20,20);
+            RWFA = window.requestAnimationFrame(Render);
+        }
+
+        const MovePlayer = () =>{
+            ctx.translate(-X_POSITION,-Y_POSITION);
+
+            let x = LAST_KEY.x - canvas.width/2;
+            let y = LAST_KEY.y - canvas.height/2;
+
+            let dis = Math.sqrt(Math.pow(x,2) + Math.pow(y,2));
+
+            JUMP = Math.floor(dis/250) + 1;
+
+            X_POSITION -= x/dis * JUMP;
+            Y_POSITION -= y/dis * JUMP;
+            MainPlayer.x += x/dis * JUMP;
+            MainPlayer.y += y/dis * JUMP;
+
+            ctx.translate(X_POSITION,Y_POSITION);
+        }
+
+        class Player{
+            constructor(){
+                this.x = 0;
+                this.y = 0;
+                this.size = 10;
+                this.color = `rgb(${Math.round(Math.random() * 255)},${Math.round(Math.random() * 255)},${Math.round(Math.random() * 255)})`;
+            }
+
+            addSize(size){
+                this.size += size;
+            }
+
+            Draw(){
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x,this.y,this.size,0,Math.PI * 2, true);
+                ctx.closePath();
+                ctx.fill();
+            }
+
+            Eat(){
+                ToDraw.forEach(e => {
+                    let dis = Math.sqrt(Math.pow(this.x - e.x,2) + Math.pow(this.y - e.y,2));
+                    if(dis <= this.size + e.size){
+                        console.log(dis);
+                        ToDraw = ToDraw.filter(a => a != e);
+                        ToDraw.push(new Food());
+                        this.size += e.size;
+                    }
+                });
+            }
+        }
+
+        class Food{
+            constructor(){
+                this.size = 7;
+                do{
+                this.x = (Math.random() - 1) + 1;
+                this.y = (Math.random() - 1) + 1;
+                this.x *= ArenaRadius;
+                this.y *= ArenaRadius;
+                } while(Math.sqrt(Math.pow(this.x - MainPlayer.x,2) + Math.pow(this.y - MainPlayer.y,2)) <= this.size + MainPlayer.size)
+            }
+
+            Draw(){
+                ctx.fillStyle = 'red';
+                ctx.strokeStyle = 'green'
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(this.x,this.y,this.size,0,Math.PI * 2, true);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+            }
+        }
+
+    </script>
+
+</head>
+<body>
+    <script>
+
+        const canvas = document.createElement("canvas");
+
+        //reset the board dimensions
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        //define ctx
+        var ctx = canvas.getContext('2d');
+
+        //define listner to window resize
+        window.addEventListener("resize",() => ResizeFrame());
+
+        //appnd the canvas in the body
+        document.body.append(canvas);
+
+        //define array of printing thing
+        var ToDraw = [];
+
+        //add eventlistner to canvas
+        window.addEventListener("mousemove",(e) => LAST_KEY = e);
+
+        StartGame();
+        for (let i = 0; i < 20; i++) {
+            ToDraw.push(new Food());
+        }
+        Render();
+        
+
+
+    </script>
+</body>
+</html>
